@@ -5,6 +5,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 )
 
 const ASCIIName string = `
@@ -68,11 +69,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 
-	ui := ASCIIName + "\n\n"
+	ui := "\n\n"
 
 	switch m.page {
 	case "home":
-		ui += "This is the home page (glamour it later)"
+		ui += `This is the home page (glamour it later)
+
+# Hello World
+
+
+
+This is a simple example of Markdown rendering with Glamour!
+Check out the [other examples](https://github.com/charmbracelet/glamour/tree/master/examples) too.
+
+Bye!
+`
 	case "about":
 		ui += "This is the about page (glamour it later)"
 	case "projects":
@@ -81,7 +92,13 @@ func (m model) View() string {
 		ui += "Contact page under construction..."
 	}
 
-	return ui
+	ui, err := glamour.Render(ui, "dark")
+	if err != nil {
+		fmt.Println("Error running program - In Glamour Render:", err)
+		os.Exit(1)
+	}
+
+	return ASCIIName + ui
 }
 
 func main() {
