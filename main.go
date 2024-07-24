@@ -24,7 +24,8 @@ const ASCIIName string = `
 
 // Bubbletea model structure
 type model struct {
-	page string
+	pageIndex int
+	pages     []string
 }
 
 func getMarkdown(filename string) string {
@@ -43,29 +44,27 @@ func check(e error) {
 }
 
 // Bubbletea function to cycle each page (when tab is clicked, this function handles the update event)
-func (m model) cyclePage() (tea.Model, tea.Cmd) {
-	switch m.page {
-	case "home":
-		m.page = "about"
+func (m model) cyclePage(direction string) (tea.Model, tea.Cmd) {
+	if m.pageIndex < len(m.pages) && direction == "right" {
+		switch m.pageIndex {
+		case len(m.pages) - 1:
+			m.pageIndex = 0
+			return m, nil
+		default:
+			m.pageIndex++
+			return m, nil
+		}
+	} else if m.pageIndex >= 0 && direction == "left" {
+		switch m.pageIndex {
+		case 0:
+			m.pageIndex = len(m.pages) - 1
+			return m, nil
+		default:
+			m.pageIndex--
+			return m, nil
+		}
+	} else {
 		return m, nil
-	case "about":
-		m.page = "projects"
-		return m, nil
-	case "projects":
-		m.page = "contact"
-		return m, nil
-	case "contact":
-		m.page = "home"
-		return m, nil
-	default:
-		return m, nil
-	}
-}
-
-// Initial model when running the program
-func initialModel() model {
-	return model{
-		page: "home",
 	}
 }
 
@@ -82,7 +81,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "tab":
-			return m.cyclePage()
+			return m.cyclePage("right")
+		case "shift+tab":
+			return m.cyclePage("left")
+		case "left":
+			if m.pageIndex > 0 {
+				m.pageIndex--
+			}
+			return m, nil
+		case "right":
+			if m.pageIndex < len(m.pages)-1 {
+				m.pageIndex++
+			}
+			return m, nil
 		}
 	}
 
@@ -92,16 +103,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Switch case with each page/TUI view
 func (m model) View() string {
 
+	nav := ``
 	ui := "\n\n"
 
-	switch m.page {
-	case "home":
+	switch m.pageIndex {
+	case 0: // Home
+		nav = ``
 		ui += getMarkdown("homepage")
-	case "about":
+	case 1: // About
+		nav = ``
 		ui += getMarkdown("about")
-	case "projects":
+	case 2: // Projects
+		nav = ``
 		ui += "This is the projects page which is under construction... (bubble list later)"
-	case "contact":
+	case 3: // Contact
+		nav = ``
 		ui += getMarkdown("contact")
 	}
 
@@ -111,12 +127,21 @@ func (m model) View() string {
 		os.Exit(1)
 	}
 
-	return ASCIIName + ui
+	return ASCIIName + nav + ui
 }
 
-// Starts the Bubbletea TUI
+// Starts the Bubbletea TUI & sets up initial state
 func main() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+
+	// Initial model & setup when running the program
+	pages := []string{"home", "about", "projects", "contact"}
+
+	initialModel := model{
+		pageIndex: 0,
+		pages:     pages,
+	}
+
+	p := tea.NewProgram(initialModel, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
