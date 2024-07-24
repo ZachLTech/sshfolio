@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // ASCII text that should be displayed through every page
@@ -44,6 +45,7 @@ type KeyMap struct {
 	Quit   key.Binding
 }
 
+// Bubbletea key mapping default behavior
 var DefaultKeyMap = KeyMap{
 	Left: key.NewBinding(
 		key.WithKeys("h", "left"),
@@ -78,6 +80,14 @@ var DefaultKeyMap = KeyMap{
 		key.WithHelp("q", "quit"),
 	),
 }
+
+// Lipgloss styling for view function & nav styling
+var (
+	navStyle           = lipgloss.NewStyle().Margin(1, 0).Padding(0, 2)
+	bubbleLettersStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#7aa2f7"))
+	activePageStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#4fd6be")).Bold(true).PaddingLeft(2).PaddingRight(4)
+	inactivePageStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(4).PaddingRight(4)
+)
 
 func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{k.Left, k.Right, k.Help, k.Quit}
@@ -169,32 +179,39 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Switch case with each page/TUI view
 func (m model) View() string {
 
-	nav := ``
+	nav := `` // Empty to be saturated soon
+
+	// Render/create nav depending on page location
+	for i, title := range m.pages {
+		if i == m.pageIndex {
+			// Highlight the active page
+			nav += activePageStyle.Render("• " + title + " ")
+		} else {
+			nav += inactivePageStyle.Render(title + " ")
+		}
+	}
 	ui := "\n\n"
 
 	switch m.pageIndex {
 	case 0: // Home
-		nav = ``
 		ui += getMarkdown("homepage")
 	case 1: // About
-		nav = ``
 		ui += getMarkdown("about")
 	case 2: // Projects
-		nav = ``
 		ui += "This is the projects page which is under construction... (bubble list later)"
 	case 3: // Contact
-		nav = ``
 		ui += getMarkdown("contact")
 	}
 
-	helpView := m.help.View(m.keys)
 	ui, err := glamour.Render(ui, "dark")
+	ui += navStyle.Render(m.help.View(m.keys)) // Add lipgloss rendered help footer to UI
+
 	if err != nil {
 		fmt.Println("Error running program - In Glamour Render:", err)
 		os.Exit(1)
 	}
 
-	return ASCIIName + nav + ui + helpView
+	return bubbleLettersStyle.Render(ASCIIName) + navStyle.Render(nav) + ui
 }
 
 // Starts the Bubbletea TUI & sets up initial state
