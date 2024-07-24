@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	// "github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 )
@@ -28,6 +30,49 @@ type model struct {
 	pages     []string
 }
 
+// Bubbletea key mapping for help component
+type KeyMap struct {
+	Left   key.Binding
+	Right  key.Binding
+	LCycle key.Binding
+	RCycle key.Binding
+	Enter  key.Binding
+	Back   key.Binding
+	Quit   key.Binding
+}
+
+var DefaultKeyMap = KeyMap{
+	Left: key.NewBinding(
+		key.WithKeys("h", "left"),
+		key.WithHelp("←/h", "move left"),
+	),
+	Right: key.NewBinding(
+		key.WithKeys("l", "right"),
+		key.WithHelp("→/l", "move right"),
+	),
+	LCycle: key.NewBinding(
+		key.WithKeys("shift+tab"),
+		key.WithHelp("shift+tab", "cycle left"),
+	),
+	RCycle: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "cycle right"),
+	),
+	Enter: key.NewBinding(
+		key.WithKeys("enter", " "),
+		key.WithHelp("enter/space", "select"),
+	),
+	Back: key.NewBinding(
+		key.WithKeys("esc", "backspace"),
+		key.WithHelp("esc/backspace", "go back"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("q", "ctrl+c"),
+		key.WithHelp("q/ctrl+c", "quit"),
+	),
+}
+
+// Function to read and return markdown file data for each page
 func getMarkdown(filename string) string {
 	fileData, err := os.ReadFile("./assets/markdown/" + filename + ".md")
 	check(err)
@@ -77,19 +122,19 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
+		switch {
+		case key.Matches(msg, DefaultKeyMap.Quit):
 			return m, tea.Quit
-		case "tab":
+		case key.Matches(msg, DefaultKeyMap.RCycle):
 			return m.cyclePage("right")
-		case "shift+tab":
+		case key.Matches(msg, DefaultKeyMap.LCycle):
 			return m.cyclePage("left")
-		case "left":
+		case key.Matches(msg, DefaultKeyMap.Left):
 			if m.pageIndex > 0 {
 				m.pageIndex--
 			}
 			return m, nil
-		case "right":
+		case key.Matches(msg, DefaultKeyMap.Right):
 			if m.pageIndex < len(m.pages)-1 {
 				m.pageIndex++
 			}
