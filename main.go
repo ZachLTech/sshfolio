@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	// "github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -28,6 +28,8 @@ const ASCIIName string = `
 type model struct {
 	pageIndex int
 	pages     []string
+	keys      KeyMap
+	help      help.Model
 }
 
 // Bubbletea key mapping for help component
@@ -38,38 +40,55 @@ type KeyMap struct {
 	RCycle key.Binding
 	Enter  key.Binding
 	Back   key.Binding
+	Help   key.Binding
 	Quit   key.Binding
 }
 
 var DefaultKeyMap = KeyMap{
 	Left: key.NewBinding(
 		key.WithKeys("h", "left"),
-		key.WithHelp("←/h", "move left"),
+		key.WithHelp("←/h", "prev page"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("l", "right"),
-		key.WithHelp("→/l", "move right"),
+		key.WithHelp("→/l", "next page"),
 	),
 	LCycle: key.NewBinding(
 		key.WithKeys("shift+tab"),
-		key.WithHelp("shift+tab", "cycle left"),
+		key.WithHelp("^tab", "cycle page prev"),
 	),
 	RCycle: key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("tab", "cycle right"),
+		key.WithHelp("tab", "cycle page next"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter", " "),
-		key.WithHelp("enter/space", "select"),
+		key.WithHelp("enter", "select"),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc", "backspace"),
-		key.WithHelp("esc/backspace", "go back"),
+		key.WithHelp("esc", "go back"),
+	),
+	Help: key.NewBinding(
+		key.WithKeys("?"),
+		key.WithHelp("?", "toggle help"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),
-		key.WithHelp("q/ctrl+c", "quit"),
+		key.WithHelp("q", "quit"),
 	),
+}
+
+func (k KeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Left, k.Right, k.Help, k.Quit}
+}
+
+func (k KeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Right, k.Left},
+		{k.RCycle, k.LCycle},
+		{k.Enter, k.Back, k.Help, k.Quit},
+	}
 }
 
 // Function to read and return markdown file data for each page
@@ -125,6 +144,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, DefaultKeyMap.Quit):
 			return m, tea.Quit
+		case key.Matches(msg, DefaultKeyMap.Help):
+			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, DefaultKeyMap.RCycle):
 			return m.cyclePage("right")
 		case key.Matches(msg, DefaultKeyMap.LCycle):
@@ -166,13 +187,14 @@ func (m model) View() string {
 		ui += getMarkdown("contact")
 	}
 
+	helpView := m.help.View(m.keys)
 	ui, err := glamour.Render(ui, "dark")
 	if err != nil {
 		fmt.Println("Error running program - In Glamour Render:", err)
 		os.Exit(1)
 	}
 
-	return ASCIIName + nav + ui
+	return ASCIIName + nav + ui + helpView
 }
 
 // Starts the Bubbletea TUI & sets up initial state
@@ -184,6 +206,8 @@ func main() {
 	initialModel := model{
 		pageIndex: 0,
 		pages:     pages,
+		keys:      DefaultKeyMap,
+		help:      help.New(),
 	}
 
 	p := tea.NewProgram(initialModel, tea.WithAltScreen())
