@@ -1,5 +1,6 @@
 package main
 
+// Imports (useless comment lol)
 import (
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"github.com/charmbracelet/glamour"
 )
 
+// ASCII text that should be displayed through every page
 const ASCIIName string = `
 
  ________  ________  ________  ___  ___          ___       ________  ________  _______   ________     
@@ -20,10 +22,27 @@ const ASCIIName string = `
 	
 	`
 
+// Bubbletea model structure
 type model struct {
 	page string
 }
 
+func getMarkdown(filename string) string {
+	fileData, err := os.ReadFile("./assets/markdown/" + filename + ".md")
+	check(err)
+
+	return string(fileData)
+}
+
+// Check function for markdown file IO
+func check(e error) {
+	if e != nil {
+		fmt.Println("Error running program - In Markdown File IO:", e)
+		os.Exit(1)
+	}
+}
+
+// Bubbletea function to cycle each page (when tab is clicked, this function handles the update event)
 func (m model) cyclePage() (tea.Model, tea.Cmd) {
 	switch m.page {
 	case "home":
@@ -43,16 +62,19 @@ func (m model) cyclePage() (tea.Model, tea.Cmd) {
 	}
 }
 
+// Initial model when running the program
 func initialModel() model {
 	return model{
 		page: "home",
 	}
 }
 
+// Empty init for now since there's not much hard logic
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
+// Bubbletea update/msg handling
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -67,29 +89,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// Switch case with each page/TUI view
 func (m model) View() string {
 
 	ui := "\n\n"
 
 	switch m.page {
 	case "home":
-		ui += `This is the home page (glamour it later)
-
-# Hello World
-
-
-
-This is a simple example of Markdown rendering with Glamour!
-Check out the [other examples](https://github.com/charmbracelet/glamour/tree/master/examples) too.
-
-Bye!
-`
+		ui += getMarkdown("homepage")
 	case "about":
-		ui += "This is the about page (glamour it later)"
+		ui += getMarkdown("about")
 	case "projects":
-		ui += "This is the projects page (bubble list later)"
+		ui += "This is the projects page which is under construction... (bubble list later)"
 	case "contact":
-		ui += "Contact page under construction..."
+		ui += getMarkdown("contact")
 	}
 
 	ui, err := glamour.Render(ui, "dark")
@@ -101,6 +114,7 @@ Bye!
 	return ASCIIName + ui
 }
 
+// Starts the Bubbletea TUI
 func main() {
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 
