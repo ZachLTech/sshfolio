@@ -40,18 +40,33 @@ type model struct {
 
 // Bubbletea key mapping for help component
 type KeyMap struct {
-	Left   key.Binding
-	Right  key.Binding
-	LCycle key.Binding
-	RCycle key.Binding
-	Enter  key.Binding
-	Back   key.Binding
-	Help   key.Binding
-	Quit   key.Binding
+	Navigate key.Binding
+	Up       key.Binding
+	Down     key.Binding
+	Left     key.Binding
+	Right    key.Binding
+	LCycle   key.Binding
+	RCycle   key.Binding
+	Enter    key.Binding
+	Back     key.Binding
+	Help     key.Binding
+	Quit     key.Binding
 }
 
 // Bubbletea key mapping default behavior
 var DefaultKeyMap = KeyMap{
+	Navigate: key.NewBinding(
+		key.WithKeys("j", "k", "up", "down"),
+		key.WithHelp("↑↓", "navigate"),
+	),
+	Up: key.NewBinding(
+		key.WithKeys("k", "up"),
+		key.WithHelp("↑/k", "up"),
+	),
+	Down: key.NewBinding(
+		key.WithKeys("j", "down"),
+		key.WithHelp("↓/j", "down"),
+	),
 	Left: key.NewBinding(
 		key.WithKeys("h", "left"),
 		key.WithHelp("←/h", "prev page"),
@@ -62,11 +77,11 @@ var DefaultKeyMap = KeyMap{
 	),
 	LCycle: key.NewBinding(
 		key.WithKeys("shift+tab"),
-		key.WithHelp("^tab", "cycle page prev"),
+		key.WithHelp("^tab", "prev section"),
 	),
 	RCycle: key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("tab", "cycle page next"),
+		key.WithHelp("tab", "section"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter", " "),
@@ -105,14 +120,14 @@ var (
 )
 
 func (k KeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Left, k.Right, k.Help, k.Quit}
+	return []key.Binding{k.Navigate, k.RCycle, k.Enter, k.Quit, k.Help}
 }
 
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Right, k.Left},
-		{k.RCycle, k.LCycle},
-		{k.Enter, k.Back},
+		{k.RCycle, k.Enter},
+		{k.Up, k.Down},
+		{k.LCycle, k.Back},
 		{k.Help, k.Quit},
 	}
 }
@@ -142,6 +157,9 @@ func saturateContent(m model) string {
 		content += "This is the projects page which is under construction... (bubble list later)"
 	case 3: // Contact
 		content, err = glamour.Render(getMarkdown("contact"), "dark")
+		check(err, "Gleam Markdown Render")
+	case 4: // Resume
+		content, err = glamour.Render(getMarkdown("resume"), "dark")
 		check(err, "Gleam Markdown Render")
 	}
 
@@ -209,6 +227,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, DefaultKeyMap.Help):
 			m.help.ShowAll = !m.help.ShowAll
+		case key.Matches(msg, DefaultKeyMap.Navigate):
+			break
+		case key.Matches(msg, DefaultKeyMap.Up):
+			break
+		case key.Matches(msg, DefaultKeyMap.Down):
+			break
 		case key.Matches(msg, DefaultKeyMap.RCycle):
 			cycled := m.cyclePage("right")
 			cycled.viewport.SetContent(saturateContent(cycled))
@@ -295,7 +319,7 @@ func (m model) View() string {
 func main() {
 
 	// Initial model & setup when running the program
-	pages := []string{"home", "about", "projects", "contact"}
+	pages := []string{"home", "about", "projects", "contact", "resume"}
 
 	initialModel := model{
 		pageIndex: 0,
