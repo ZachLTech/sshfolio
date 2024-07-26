@@ -46,6 +46,9 @@ func check(e error, check string) {
 	}
 }
 
+// For clickable area positioning
+var termHeight int
+
 // Lipgloss styling for view function & nav styling
 var (
 	navStyle           = lipgloss.NewStyle().Margin(1, 0).Padding(0, 2)
@@ -271,6 +274,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.pageIndex = i
 					m.viewport.SetContent(saturateContent(m))
 					return m, nil
+				} else if msg.Y >= termHeight-3 {
+					m.help.ShowAll = !m.help.ShowAll
+					return m, nil
 				}
 			}
 		}
@@ -308,6 +314,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.WindowSizeMsg:
+		termHeight = msg.Height
 		headerHeight := lipgloss.Height(m.viewportHeader(m.pages[m.pageIndex]))
 		footerHeight := lipgloss.Height(m.viewportFooter())
 		verticalMarginHeight := headerHeight + footerHeight
