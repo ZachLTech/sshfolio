@@ -38,7 +38,33 @@ type model struct {
 	ready     bool
 }
 
-// Bubbletea key mapping for help component
+// Check err
+func check(e error, check string) {
+	if e != nil {
+		fmt.Printf("Error running program - In %v: %v", check, e)
+		os.Exit(1)
+	}
+}
+
+// Lipgloss styling for view function & nav styling
+var (
+	navStyle           = lipgloss.NewStyle().Margin(1, 0).Padding(0, 2)
+	bubbleLettersStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#7aa2f7"))
+	activePageStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#4fd6be")).Bold(true).PaddingLeft(2).PaddingRight(4)
+	inactivePageStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(4).PaddingRight(4)
+
+	// Border styles
+	borderTitleStyle = func() lipgloss.Style {
+		b := lipgloss.HiddenBorder()
+		return lipgloss.NewStyle().BorderStyle(b).Padding(0, 1)
+	}()
+	borderInfoStyle = func() lipgloss.Style {
+		b := lipgloss.HiddenBorder()
+		return borderTitleStyle.BorderStyle(b)
+	}()
+)
+
+// Bubbletea key mapping for help component (Struct + defaults)
 type KeyMap struct {
 	Navigate key.Binding
 	Up       key.Binding
@@ -53,7 +79,6 @@ type KeyMap struct {
 	Quit     key.Binding
 }
 
-// Bubbletea key mapping default behavior
 var DefaultKeyMap = KeyMap{
 	Navigate: key.NewBinding(
 		key.WithKeys("j", "k", "up", "down"),
@@ -101,28 +126,10 @@ var DefaultKeyMap = KeyMap{
 	),
 }
 
-// Lipgloss styling for view function & nav styling
-var (
-	navStyle           = lipgloss.NewStyle().Margin(1, 0).Padding(0, 2)
-	bubbleLettersStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#7aa2f7"))
-	activePageStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#4fd6be")).Bold(true).PaddingLeft(2).PaddingRight(4)
-	inactivePageStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(4).PaddingRight(4)
-
-	// Border styles
-	borderTitleStyle = func() lipgloss.Style {
-		b := lipgloss.HiddenBorder()
-		return lipgloss.NewStyle().BorderStyle(b).Padding(0, 1)
-	}()
-	borderInfoStyle = func() lipgloss.Style {
-		b := lipgloss.HiddenBorder()
-		return borderTitleStyle.BorderStyle(b)
-	}()
-)
-
+// Bubbletea help component full & short displays
 func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{k.Navigate, k.RCycle, k.Enter, k.Quit, k.Help}
 }
-
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.RCycle, k.Enter},
@@ -158,28 +165,9 @@ func saturateContent(m model) string {
 	case 3: // Contact
 		content, err = glamour.Render(getMarkdown("contact"), "dark")
 		check(err, "Gleam Markdown Render")
-	case 4: // Resume
-		content, err = glamour.Render(getMarkdown("resume"), "dark")
-		check(err, "Gleam Markdown Render")
 	}
 
 	return content
-}
-
-// Check err
-func check(e error, check string) {
-	if e != nil {
-		fmt.Printf("Error running program - In %v: %v", check, e)
-		os.Exit(1)
-	}
-}
-
-// Max function for viewport line length
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 // Bubbletea function to cycle each page (when tab is clicked, this function handles the update event)
@@ -207,9 +195,61 @@ func (m model) cyclePage(direction string) model {
 	}
 }
 
+// Gets the location and size of each navigation menu button
+// (this is hard coded as of now since I have no idea how to programmatically find a components location & size in the terminal)
+func (m model) calculateNavItemPosition(title string) (int, int) {
+	startingPoint := m.viewport.Width/2 - 57
+	switch title {
+	case "home":
+		return startingPoint + 30, 8 // started at 30 before startpoint impl
+	case "about":
+		return startingPoint + 43, 8
+	case "projects":
+		return startingPoint + 58, 8
+	case "contact":
+		return startingPoint + 75, 8
+	default:
+		return 0, 0
+	}
+}
+func calculateNavItemSize(title string) (int, int) {
+	switch title {
+	case "home":
+		return 10, 2
+	case "about":
+		return 10, 2
+	case "projects":
+		return 13, 2
+	case "contact":
+		return 12, 2
+	default:
+		return 0, 0
+	}
+}
+
+// Max function for viewport line length
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// Page viewport header and footer render
+func (m model) viewportHeader(pageTitle string) string {
+	title := borderTitleStyle.Render(pageTitle)
+	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
+}
+func (m model) viewportFooter() string {
+	info := borderInfoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
+}
+
 // Empty init for now since there's not much hard logic
 func (m model) Init() tea.Cmd {
-	return nil
+	return tea.SetWindowTitle("Welcome to my Portfolio TUI 😄")
 }
 
 // Bubbletea update/msg handling
@@ -221,6 +261,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
+	case tea.MouseMsg:
+		if tea.MouseAction(msg.Button) == 1 {
+			for i, title := range m.pages {
+				x, y := m.calculateNavItemPosition(title)
+				width, height := calculateNavItemSize(title)
+
+				if msg.X >= x && msg.X <= x+width && msg.Y >= y && msg.Y <= y+height {
+					m.pageIndex = i
+					m.viewport.SetContent(saturateContent(m))
+					return m, nil
+				}
+			}
+		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, DefaultKeyMap.Quit):
@@ -276,18 +329,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) viewportHeader(pageTitle string) string {
-	title := borderTitleStyle.Render(pageTitle)
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
-	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
-}
-
-func (m model) viewportFooter() string {
-	info := borderInfoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
-	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
-}
-
 // Switch case with each page/TUI view
 func (m model) View() string {
 
@@ -319,7 +360,7 @@ func (m model) View() string {
 func main() {
 
 	// Initial model & setup when running the program
-	pages := []string{"home", "about", "projects", "contact", "resume"}
+	pages := []string{"home", "about", "projects", "contact"}
 
 	initialModel := model{
 		pageIndex: 0,
