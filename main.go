@@ -30,18 +30,19 @@ const ASCIIName string = `
 
 // Bubbletea model structure
 type model struct {
-	pageIndex   int
-	pages       []string
-	projects    []string
-	projectOpen bool
-	openProject int
-	projectView string
-	viewport    viewport.Model
-	list        list.Model
-	content     string
-	keys        KeyMap
-	help        help.Model
-	ready       bool
+	pageIndex    int
+	pages        []string
+	projects     []string
+	projectOpen  bool
+	openProject  int
+	projectView  string
+	clickCounter int
+	viewport     viewport.Model
+	list         list.Model
+	content      string
+	keys         KeyMap
+	help         help.Model
+	ready        bool
 }
 
 // Check err
@@ -230,7 +231,7 @@ func (m model) calculateNavItemPosition(title string) (int, int) {
 	startingPoint := m.viewport.Width/2 - 57
 	switch title {
 	case "home":
-		return startingPoint + 30, 8 // started at 30 before startpoint impl
+		return startingPoint + 30, 8
 	case "about":
 		return startingPoint + 43, 8
 	case "projects":
@@ -292,7 +293,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.MouseMsg:
-		if tea.MouseAction(msg.Button) == 1 {
+		switch tea.MouseAction(msg.Button) {
+		case 1: // Mouse left click
 			for i, title := range m.pages {
 				x, y := m.calculateNavItemPosition(title)
 				width, height := calculateNavItemSize(title)
@@ -304,6 +306,44 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else if msg.Y >= termHeight-3 {
 					m.help.ShowAll = !m.help.ShowAll
 					return m, nil
+				}
+			}
+			// This is a very lousy approach for making each item clickable but it's the only way I have time to do as of now...
+			// This also causes the mouse support to break on pages past the first if pagination is necessary depending on terminal size
+			if m.pageIndex == 2 && !m.projectOpen && msg.Y >= 15 && msg.Y < termHeight-3 {
+				projectIndex := 0
+				for i := 15; i <= 39; i += 3 {
+					if i <= msg.Y && msg.Y <= i+1 {
+						if m.list.Index() == projectIndex {
+							m.clickCounter++
+						} else {
+							m.clickCounter = 0
+						}
+						m.list.Select(projectIndex)
+					} else {
+						projectIndex++
+					}
+					if m.clickCounter >= 2 {
+						m.clickCounter = 0
+						m.projectOpen = true
+						m.openProject = m.list.Index()
+					}
+				}
+			}
+		case 4: // Scroll wheel up
+			if m.pageIndex == 2 && !m.projectOpen {
+				if m.list.Index() == 0 {
+					m.list.Select(len(m.projects))
+				} else {
+					m.list.Select(m.list.Index() - 1)
+				}
+			}
+		case 5: // Scroll wheel down
+			if m.pageIndex == 2 && !m.projectOpen {
+				if m.list.Index() == len(m.projects)-1 {
+					m.list.Select(0)
+				} else {
+					m.list.Select(m.list.Index() + 1)
 				}
 			}
 		}
