@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -32,6 +33,7 @@ type model struct {
 	pageIndex int
 	pages     []string
 	viewport  viewport.Model
+	list      list.Model
 	content   string
 	keys      KeyMap
 	help      help.Model
@@ -52,9 +54,11 @@ var termHeight int
 // Lipgloss styling for view function & nav styling
 var (
 	navStyle           = lipgloss.NewStyle().Margin(1, 0).Padding(0, 2)
+	listStyle          = lipgloss.NewStyle().Padding(1, 2)
 	bubbleLettersStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#7aa2f7"))
-	activePageStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#4fd6be")).Bold(true).PaddingLeft(2).PaddingRight(4)
-	inactivePageStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(4).PaddingRight(4)
+	// For nav text
+	activePageStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#4fd6be")).Bold(true).PaddingLeft(2).PaddingRight(4)
+	inactivePageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(4).PaddingRight(4)
 
 	// Border styles
 	borderTitleStyle = func() lipgloss.Style {
@@ -67,7 +71,7 @@ var (
 	}()
 )
 
-// Bubbletea key mapping for help component (Struct + defaults)
+// Bubbletea key mapping (Struct + defaults)
 type KeyMap struct {
 	Navigate key.Binding
 	Up       key.Binding
@@ -142,6 +146,15 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
+// Projects list setup
+type item struct {
+	title, desc string
+}
+
+func (i item) Title() string       { return i.title }
+func (i item) Description() string { return i.desc }
+func (i item) FilterValue() string { return i.title }
+
 // Function to read and return markdown file data for each page
 func getMarkdown(filename string) string {
 	fileData, err := os.ReadFile("./assets/markdown/" + filename + ".md")
@@ -163,8 +176,6 @@ func saturateContent(m model) string {
 	case 1: // About
 		content, err = glamour.Render(getMarkdown("about"), "dark")
 		check(err, "Gleam Markdown Render")
-	case 2: // Projects
-		content += "This is the projects page which is under construction... (bubble list later)"
 	case 3: // Contact
 		content, err = glamour.Render(getMarkdown("contact"), "dark")
 		check(err, "Gleam Markdown Render")
@@ -259,8 +270,9 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Commands to be returned for viewport updating
 	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
+		viewportCMD     tea.Cmd
+		projectsListCMD tea.Cmd
+		cmds            []tea.Cmd
 	)
 
 	switch msg := msg.(type) {
@@ -314,11 +326,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.WindowSizeMsg:
+		// Set new terminal height for proper click areas
 		termHeight = msg.Height
+		// Setup for viewport sizing
 		headerHeight := lipgloss.Height(m.viewportHeader(m.pages[m.pageIndex]))
 		footerHeight := lipgloss.Height(m.viewportFooter())
 		verticalMarginHeight := headerHeight + footerHeight
+		// Project list size
+		listMarginWidth, listMarginHeight := listStyle.GetFrameSize()
+		m.list.SetSize(msg.Width-listMarginWidth, msg.Height-listMarginHeight-verticalMarginHeight-10)
 
+		// Viewport creation & management
 		if !m.ready {
 			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight-10)
 			m.viewport.SetContent(saturateContent(m))
@@ -330,8 +348,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// Handle keyboard and mouse events in the viewport
-	m.viewport, cmd = m.viewport.Update(msg)
-	cmds = append(cmds, cmd)
+	// Gets viewport update command and map based on the message
+	m.viewport, viewportCMD = m.viewport.Update(msg)
+	// Update list depending on msg
+	// Does the same as viewport but for projects list
+	m.list, projectsListCMD = m.list.Update(msg)
+	// Append all component commands to cmds
+	cmds = append(cmds, viewportCMD, projectsListCMD)
 
 	return m, tea.Batch(cmds...)
 }
@@ -356,7 +379,11 @@ func (m model) View() string {
 		}
 	}
 
-	m.content = m.viewportHeader(m.pages[m.pageIndex]) + m.viewport.View() + m.viewportFooter()
+	if m.pageIndex != 2 {
+		m.content = m.viewportHeader(m.pages[m.pageIndex]) + m.viewport.View() + m.viewportFooter()
+	} else {
+		m.content = m.viewportHeader(m.pages[m.pageIndex]) + listStyle.Render(m.list.View()) + m.viewportFooter()
+	}
 	header := lipgloss.PlaceHorizontal(m.viewport.Width, lipgloss.Center, bubbleLettersStyle.Render(ASCIIName))
 	nav = lipgloss.PlaceHorizontal(m.viewport.Width, lipgloss.Center, navStyle.Render(nav))
 
@@ -369,12 +396,34 @@ func main() {
 	// Initial model & setup when running the program
 	pages := []string{"home", "about", "projects", "contact"}
 
+	projects := []list.Item{
+		item{title: "Raspberry Pi’s", desc: "I have ’em all over my house"},
+		item{title: "Nutella", desc: "It's good on toast"},
+		item{title: "Bitter melon", desc: "It cools you down"},
+		item{title: "Nice socks", desc: "And by that I mean socks without holes"},
+		item{title: "Eight hours of sleep", desc: "I had this once"},
+		item{title: "Cats", desc: "Usually"},
+		item{title: "Plantasia, the album", desc: "My plants love it too"},
+		item{title: "Pour over coffee", desc: "It takes forever to make though"},
+		item{title: "VR", desc: "Virtual reality...what is there to say?"},
+		item{title: "Noguchi Lamps", desc: "Such pleasing organic forms"},
+		item{title: "Linux", desc: "Pretty much the best OS"},
+	}
+
 	initialModel := model{
 		pageIndex: 0,
 		pages:     pages,
+		list:      list.New(projects, list.NewDefaultDelegate(), 0, 0),
 		keys:      DefaultKeyMap,
 		help:      help.New(),
 	}
+
+	initialModel.list.InfiniteScrolling = true
+	initialModel.list.DisableQuitKeybindings()
+	initialModel.list.SetFilteringEnabled(false)
+	initialModel.list.SetShowHelp(false)
+	initialModel.list.SetShowTitle(false)
+	initialModel.list.Title = "Hit ENTER for more details"
 
 	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
 
