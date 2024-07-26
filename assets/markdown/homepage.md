@@ -63,4 +63,4 @@ I learned so much making this TUI especially it being my first time writing Go. 
 
 Also I do plan to make this a modular program with way cleaner implementations once I have the time to so anyone could clone my source code repo and make their own TUI portfolio easily
 
-Project inspired by [soft-serve](https://github.com/charmbracelet/soft-serve) - Try it with `ssh git.charm.sh`
+Project inspired by [soft-serve](https://github.com/charmbracelet/soft-serve) - Try it with `$ ssh git.charm.sh`

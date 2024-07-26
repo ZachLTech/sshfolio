@@ -25,7 +25,8 @@ const ASCIIName string = `
     /  /_/__\ \  \ \  \ \  \____\ \  \ \  \       \ \  \____\ \  \\\  \ \  \___|\ \  \_|\ \ /  /_/__  
    |\________\ \__\ \__\ \_______\ \__\ \__\       \ \_______\ \_______\ \__\    \ \_______\\________\
     \|_______|\|__|\|__|\|_______|\|__|\|__|        \|_______|\|_______|\|__|     \|_______|\|_______|
-	
+
+		"innovation isn't thinking outside the box. It's not even seeing one." - Daniel Cane
 	`
 
 // Bubbletea model structure
@@ -164,8 +165,9 @@ func openProject(selectedProject int, projects []string, viewportWidth int) stri
 	for indexedProject, project := range projects {
 		if indexedProject == selectedProject {
 			rawProjectPageTemplate, _ := glamour.NewTermRenderer(
-				glamour.WithAutoStyle(),
-				glamour.WithWordWrap(viewportWidth-10),
+				glamour.WithStylePath("assets/MDStyle.json"),
+				// glamour.WithAutoStyle(), - For Light/Darkmode styling except I'd rather use my custom style
+				glamour.WithWordWrap(viewportWidth-20),
 			)
 
 			projectPage, err := rawProjectPageTemplate.Render(getMarkdown("projects/" + project))
@@ -192,8 +194,9 @@ func saturateContent(m model, viewportWidth int) string {
 	var err error
 
 	rawMarkdownPageTemplate, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(viewportWidth-10),
+		glamour.WithStylePath("assets/MDStyle.json"),
+		// glamour.WithAutoStyle(), - For Light/Darkmode styling except I'd rather use my custom style
+		glamour.WithWordWrap(viewportWidth-20),
 	)
 
 	switch m.pageIndex {
@@ -242,13 +245,13 @@ func (m model) calculateNavItemPosition(title string) (int, int) {
 	startingPoint := m.viewport.Width/2 - 57
 	switch title {
 	case "home":
-		return startingPoint + 30, 8
+		return startingPoint + 30, 9
 	case "about":
-		return startingPoint + 43, 8
+		return startingPoint + 43, 9
 	case "projects":
-		return startingPoint + 58, 8
+		return startingPoint + 58, 9
 	case "contact":
-		return startingPoint + 75, 8
+		return startingPoint + 75, 9
 	default:
 		return 0, 0
 	}
@@ -411,16 +414,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		verticalMarginHeight := headerHeight + footerHeight
 		// Project list size
 		listMarginWidth, listMarginHeight := listStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-listMarginWidth, msg.Height-listMarginHeight-verticalMarginHeight-10)
+		m.list.SetSize(msg.Width-listMarginWidth, msg.Height-listMarginHeight-verticalMarginHeight-11)
 
 		// Viewport creation & management
 		if !m.ready {
-			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight-10)
+			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight-11)
 			m.viewport.SetContent(saturateContent(m, m.viewport.Width))
 			m.ready = true
 		} else {
 			m.viewport.Width = msg.Width
-			m.viewport.Height = msg.Height - verticalMarginHeight - 10
+			m.viewport.Height = msg.Height - verticalMarginHeight - 11
 		}
 	}
 
