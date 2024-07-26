@@ -30,14 +30,18 @@ const ASCIIName string = `
 
 // Bubbletea model structure
 type model struct {
-	pageIndex int
-	pages     []string
-	viewport  viewport.Model
-	list      list.Model
-	content   string
-	keys      KeyMap
-	help      help.Model
-	ready     bool
+	pageIndex   int
+	pages       []string
+	projects    []string
+	projectOpen bool
+	openProject int
+	projectView string
+	viewport    viewport.Model
+	list        list.Model
+	content     string
+	keys        KeyMap
+	help        help.Model
+	ready       bool
 }
 
 // Check err
@@ -154,6 +158,17 @@ type item struct {
 func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
+
+func openProject(selectedProject int, projects []string) string {
+	for indexedProject, project := range projects {
+		if indexedProject == selectedProject {
+			projectPage, err := glamour.Render(getMarkdown("projects/"+project), "dark")
+			check(err, "Project Glamour Render")
+			return projectPage
+		}
+	}
+	return fmt.Sprintf("Could not get %s project info...", projects[selectedProject])
+}
 
 // Function to read and return markdown file data for each page
 func getMarkdown(filename string) string {
@@ -324,6 +339,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.viewport.SetContent(saturateContent(m))
 			}
 			return m, nil
+		case key.Matches(msg, DefaultKeyMap.Enter):
+			if m.pageIndex == 2 {
+				m.projectOpen = true
+				m.openProject = m.list.Index()
+			}
+		case key.Matches(msg, DefaultKeyMap.Back):
+			if m.pageIndex == 2 {
+				m.projectOpen = false
+				m.list.Select(m.openProject)
+			}
 		}
 	case tea.WindowSizeMsg:
 		// Set new terminal height for proper click areas
@@ -347,6 +372,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	if m.pageIndex == 2 && m.projectOpen {
+		m.viewport.SetContent(openProject(m.openProject, m.projects))
+	}
 	// Handle keyboard and mouse events in the viewport
 	// Gets viewport update command and map based on the message
 	m.viewport, viewportCMD = m.viewport.Update(msg)
@@ -379,11 +407,16 @@ func (m model) View() string {
 		}
 	}
 
-	if m.pageIndex != 2 {
-		m.content = m.viewportHeader(m.pages[m.pageIndex]) + m.viewport.View() + m.viewportFooter()
-	} else {
-		m.content = m.viewportHeader(m.pages[m.pageIndex]) + listStyle.Render(m.list.View()) + m.viewportFooter()
+	m.content = m.viewportHeader(m.pages[m.pageIndex]) + m.viewport.View() + m.viewportFooter()
+	if m.pageIndex == 2 {
+		if !m.projectOpen {
+			m.projectView = listStyle.Render(m.list.View())
+		} else if m.projectOpen {
+			m.projectView = m.viewport.View()
+		}
+		m.content = m.viewportHeader(m.pages[m.pageIndex]) + m.projectView + m.viewportFooter()
 	}
+
 	header := lipgloss.PlaceHorizontal(m.viewport.Width, lipgloss.Center, bubbleLettersStyle.Render(ASCIIName))
 	nav = lipgloss.PlaceHorizontal(m.viewport.Width, lipgloss.Center, navStyle.Render(nav))
 
@@ -396,26 +429,28 @@ func main() {
 	// Initial model & setup when running the program
 	pages := []string{"home", "about", "projects", "contact"}
 
-	projects := []list.Item{
-		item{title: "Raspberry Pi’s", desc: "I have ’em all over my house"},
-		item{title: "Nutella", desc: "It's good on toast"},
-		item{title: "Bitter melon", desc: "It cools you down"},
-		item{title: "Nice socks", desc: "And by that I mean socks without holes"},
-		item{title: "Eight hours of sleep", desc: "I had this once"},
-		item{title: "Cats", desc: "Usually"},
-		item{title: "Plantasia, the album", desc: "My plants love it too"},
-		item{title: "Pour over coffee", desc: "It takes forever to make though"},
-		item{title: "VR", desc: "Virtual reality...what is there to say?"},
-		item{title: "Noguchi Lamps", desc: "Such pleasing organic forms"},
-		item{title: "Linux", desc: "Pretty much the best OS"},
+	// Initializes projects list and itemized list for projects page
+	projects := []string{"AEVSoftware", "Devfolify", "Schedulix", "SSHfolio", "Eduquest", "MemeAPI", "WebDevCourse", "Homelab", "ZachLTechWeb"}
+	itemizedProjects := []list.Item{
+		item{title: "Alset Solar Cybersedan Software", desc: "A full stack ecosystem powering the FAUHS AEV solar car"},
+		item{title: "Devfolify", desc: "Giving you real world problems and a chance to solve it using code in your unique way"},
+		item{title: "Schedulix", desc: "A program that helps university students develop their course schedules for their upcoming semester"},
+		item{title: "SSHfolio", desc: "Minimally showing off all your unique talents through a publically SSHable TUI interface written in Go"},
+		item{title: "Eduquest", desc: "Enjoy a world where education is guided by YOUR passions and preferences."},
+		item{title: "MemeAPI", desc: "Just a funny API with ElysiaJS because Bun is cool and I had this idea a while ago for fun"},
+		item{title: "WebDevCourse", desc: "Homemade Web Dev't Course for Friends that doesn't involve 12 hour \"full course\" videos (they're bad)"},
+		item{title: "The Lopez Lab", desc: "A personal homelab infrastructure I put together for complex code experimentation and hosting almost anything"},
+		item{title: "Personal Digital Branding", desc: "A collective web of sites and easter eggs I laid across the internet for anyone to explore"},
 	}
 
 	initialModel := model{
-		pageIndex: 0,
-		pages:     pages,
-		list:      list.New(projects, list.NewDefaultDelegate(), 0, 0),
-		keys:      DefaultKeyMap,
-		help:      help.New(),
+		pageIndex:   0,
+		pages:       pages,
+		projects:    projects,
+		projectOpen: false,
+		list:        list.New(itemizedProjects, list.NewDefaultDelegate(), 0, 0),
+		keys:        DefaultKeyMap,
+		help:        help.New(),
 	}
 
 	initialModel.list.InfiniteScrolling = true
