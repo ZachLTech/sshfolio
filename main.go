@@ -160,11 +160,17 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
-func openProject(selectedProject int, projects []string) string {
+func openProject(selectedProject int, projects []string, viewportWidth int) string {
 	for indexedProject, project := range projects {
 		if indexedProject == selectedProject {
-			projectPage, err := glamour.Render(getMarkdown("projects/"+project), "dark")
+			rawProjectPageTemplate, _ := glamour.NewTermRenderer(
+				glamour.WithAutoStyle(),
+				glamour.WithWordWrap(viewportWidth-10),
+			)
+
+			projectPage, err := rawProjectPageTemplate.Render(getMarkdown("projects/" + project))
 			check(err, "Project Glamour Render")
+
 			return projectPage
 		}
 	}
@@ -180,20 +186,25 @@ func getMarkdown(filename string) string {
 }
 
 // Function to get the proper content according to each page
-func saturateContent(m model) string {
+func saturateContent(m model, viewportWidth int) string {
 	// Checks which page the user is on and renders it accordingly
 	var content string
 	var err error
 
+	rawMarkdownPageTemplate, _ := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(viewportWidth-10),
+	)
+
 	switch m.pageIndex {
 	case 0: // Home
-		content, err = glamour.Render(getMarkdown("homepage"), "dark")
+		content, err = rawMarkdownPageTemplate.Render(getMarkdown("homepage"))
 		check(err, "Gleam Markdown Render")
 	case 1: // About
-		content, err = glamour.Render(getMarkdown("about"), "dark")
+		content, err = rawMarkdownPageTemplate.Render(getMarkdown("about"))
 		check(err, "Gleam Markdown Render")
 	case 3: // Contact
-		content, err = glamour.Render(getMarkdown("contact"), "dark")
+		content, err = rawMarkdownPageTemplate.Render(getMarkdown("contact"))
 		check(err, "Gleam Markdown Render")
 	}
 
@@ -301,7 +312,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				if msg.X >= x && msg.X <= x+width && msg.Y >= y && msg.Y <= y+height {
 					m.pageIndex = i
-					m.viewport.SetContent(saturateContent(m))
+					m.viewport.SetContent(saturateContent(m, m.viewport.Width))
 					return m, nil
 				} else if msg.Y >= termHeight-3 {
 					m.help.ShowAll = !m.help.ShowAll
@@ -313,7 +324,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.pageIndex == 2 && !m.projectOpen && msg.Y >= 15 && msg.Y < termHeight-3 {
 				projectIndex := 0
 				// BUG: for some reason after clicking down the list every once in a while it would enter the project MD even though it had only been clicked once then they all do that from that point on
-				for i := 15; projectIndex <= len(m.projects); i += 3 {
+				for i := 15; projectIndex <= len(m.projects)-1; i += 3 {
 					if i <= msg.Y && msg.Y <= i+1 {
 						if m.list.Index() == projectIndex {
 							m.clickCounter++
@@ -362,22 +373,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		case key.Matches(msg, DefaultKeyMap.RCycle):
 			cycled := m.cyclePage("right")
-			cycled.viewport.SetContent(saturateContent(cycled))
+			cycled.viewport.SetContent(saturateContent(cycled, m.viewport.Width))
 			return cycled, nil
 		case key.Matches(msg, DefaultKeyMap.LCycle):
 			cycled := m.cyclePage("left")
-			m.viewport.SetContent(saturateContent(cycled))
+			m.viewport.SetContent(saturateContent(cycled, m.viewport.Width))
 			return m.cyclePage("left"), nil
 		case key.Matches(msg, DefaultKeyMap.Left):
 			if m.pageIndex > 0 {
 				m.pageIndex--
-				m.viewport.SetContent(saturateContent(m))
+				m.viewport.SetContent(saturateContent(m, m.viewport.Width))
 			}
 			return m, nil
 		case key.Matches(msg, DefaultKeyMap.Right):
 			if m.pageIndex < len(m.pages)-1 {
 				m.pageIndex++
-				m.viewport.SetContent(saturateContent(m))
+				m.viewport.SetContent(saturateContent(m, m.viewport.Width))
 			}
 			return m, nil
 		case key.Matches(msg, DefaultKeyMap.Enter):
@@ -405,7 +416,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Viewport creation & management
 		if !m.ready {
 			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight-10)
-			m.viewport.SetContent(saturateContent(m))
+			m.viewport.SetContent(saturateContent(m, m.viewport.Width))
 			m.ready = true
 		} else {
 			m.viewport.Width = msg.Width
@@ -414,7 +425,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.pageIndex == 2 && m.projectOpen {
-		m.viewport.SetContent(openProject(m.openProject, m.projects))
+		m.viewport.SetContent(openProject(m.openProject, m.projects, m.viewport.Width))
 	}
 	// Handle keyboard and mouse events in the viewport
 	// Gets viewport update command and map based on the message
