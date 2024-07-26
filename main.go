@@ -312,7 +312,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// This also causes the mouse support to break on pages past the first if pagination is necessary depending on terminal size
 			if m.pageIndex == 2 && !m.projectOpen && msg.Y >= 15 && msg.Y < termHeight-3 {
 				projectIndex := 0
-				for i := 15; i <= 39; i += 3 {
+				// BUG: for some reason after clicking down the list every once in a while it would enter the project MD even though it had only been clicked once then they all do that from that point on
+				for i := 15; projectIndex <= len(m.projects); i += 3 {
 					if i <= msg.Y && msg.Y <= i+1 {
 						if m.list.Index() == projectIndex {
 							m.clickCounter++
