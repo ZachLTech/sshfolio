@@ -2,9 +2,22 @@ package main
 
 // Imports (useless comment lol)
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
+
+	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/ssh"
+	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/activeterm"
+	"github.com/charmbracelet/wish/bubbletea"
+	"github.com/charmbracelet/wish/logging"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -14,6 +27,84 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
+
+const (
+	host = "localhost"
+	port = "22220"
+)
+
+// Starts the Bubbletea TUI & sets up initial state
+func main() {
+
+	server, err := wish.NewServer(
+		wish.WithAddress(net.JoinHostPort(host, port)),
+		wish.WithHostKeyPath(".ssh/id_ed25519"),
+		wish.WithMiddleware(
+			bubbletea.Middleware(teaHandler),
+			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
+			logging.Middleware(),
+		),
+	)
+	if err != nil {
+		log.Error("Could not start server", "error", err)
+	}
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	log.Info("Starting SSH server", "host", host, "port", port)
+	go func() {
+		if err = server.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+			log.Error("Could not start server", "error", err)
+			done <- nil
+		}
+	}()
+
+	<-done
+	log.Info("Stopping SSH server")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer func() { cancel() }()
+	if err := server.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+		log.Error("Could not stop server", "error", err)
+	}
+}
+
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	// Initial model & setup when running the program
+	pages := []string{"home", "about", "projects", "contact"}
+
+	// Initializes projects list and itemized list for projects page
+	projects := []string{"AEVSoftware", "Devfolify", "Schedulix", "SSHfolio", "Eduquest", "MemeAPI", "WebDevCourse", "Homelab", "ZachLTechWeb"}
+	itemizedProjects := []list.Item{
+		item{title: "Alset Solar Cybersedan Software", desc: "A full stack ecosystem powering the FAUHS AEV solar car"},
+		item{title: "Devfolify", desc: "Giving you real world problems and a chance to solve it using code in your unique way"},
+		item{title: "Schedulix", desc: "A program that helps university students develop their course schedules for their upcoming semester"},
+		item{title: "SSHfolio", desc: "Minimally showing off all your unique talents through a publically SSHable TUI interface written in Go"},
+		item{title: "Eduquest", desc: "Enjoy a world where education is guided by YOUR passions and preferences."},
+		item{title: "MemeAPI", desc: "Just a funny API with ElysiaJS because Bun is cool and I had this idea a while ago for fun"},
+		item{title: "WebDevCourse", desc: "Homemade Web Dev't Course for Friends that doesn't involve 12 hour \"full course\" videos (they're bad)"},
+		item{title: "The Lopez Lab", desc: "A personal homelab infrastructure I put together for complex code experimentation and hosting almost anything"},
+		item{title: "Personal Digital Branding", desc: "A collective web of sites and easter eggs I laid across the internet for anyone to explore"},
+	}
+
+	initialModel := model{
+		pageIndex:   0,
+		pages:       pages,
+		projects:    projects,
+		projectOpen: false,
+		list:        list.New(itemizedProjects, list.NewDefaultDelegate(), 0, 0),
+		keys:        DefaultKeyMap,
+		help:        help.New(),
+	}
+
+	initialModel.list.InfiniteScrolling = true
+	initialModel.list.DisableQuitKeybindings()
+	initialModel.list.SetFilteringEnabled(false)
+	initialModel.list.SetShowHelp(false)
+	initialModel.list.SetShowTitle(false)
+	initialModel.list.Title = "Hit ENTER for more details"
+
+	return initialModel, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
+}
 
 // ASCII text that should be displayed through every page
 const ASCIIName string = `
@@ -50,7 +141,6 @@ type model struct {
 func check(e error, check string) {
 	if e != nil {
 		fmt.Printf("Error running program - In %v: %v", check, e)
-		os.Exit(1)
 	}
 }
 
@@ -478,49 +568,4 @@ func (m model) View() string {
 	nav = lipgloss.PlaceHorizontal(m.viewport.Width, lipgloss.Center, navStyle.Render(nav))
 
 	return header + nav + m.content + navStyle.Render(m.help.View(m.keys)) // NAME TITLE + NAVIGATION + MAIN PAGE + FOOTER/HELP
-}
-
-// Starts the Bubbletea TUI & sets up initial state
-func main() {
-
-	// Initial model & setup when running the program
-	pages := []string{"home", "about", "projects", "contact"}
-
-	// Initializes projects list and itemized list for projects page
-	projects := []string{"AEVSoftware", "Devfolify", "Schedulix", "SSHfolio", "Eduquest", "MemeAPI", "WebDevCourse", "Homelab", "ZachLTechWeb"}
-	itemizedProjects := []list.Item{
-		item{title: "Alset Solar Cybersedan Software", desc: "A full stack ecosystem powering the FAUHS AEV solar car"},
-		item{title: "Devfolify", desc: "Giving you real world problems and a chance to solve it using code in your unique way"},
-		item{title: "Schedulix", desc: "A program that helps university students develop their course schedules for their upcoming semester"},
-		item{title: "SSHfolio", desc: "Minimally showing off all your unique talents through a publically SSHable TUI interface written in Go"},
-		item{title: "Eduquest", desc: "Enjoy a world where education is guided by YOUR passions and preferences."},
-		item{title: "MemeAPI", desc: "Just a funny API with ElysiaJS because Bun is cool and I had this idea a while ago for fun"},
-		item{title: "WebDevCourse", desc: "Homemade Web Dev't Course for Friends that doesn't involve 12 hour \"full course\" videos (they're bad)"},
-		item{title: "The Lopez Lab", desc: "A personal homelab infrastructure I put together for complex code experimentation and hosting almost anything"},
-		item{title: "Personal Digital Branding", desc: "A collective web of sites and easter eggs I laid across the internet for anyone to explore"},
-	}
-
-	initialModel := model{
-		pageIndex:   0,
-		pages:       pages,
-		projects:    projects,
-		projectOpen: false,
-		list:        list.New(itemizedProjects, list.NewDefaultDelegate(), 0, 0),
-		keys:        DefaultKeyMap,
-		help:        help.New(),
-	}
-
-	initialModel.list.InfiniteScrolling = true
-	initialModel.list.DisableQuitKeybindings()
-	initialModel.list.SetFilteringEnabled(false)
-	initialModel.list.SetShowHelp(false)
-	initialModel.list.SetShowTitle(false)
-	initialModel.list.Title = "Hit ENTER for more details"
-
-	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
-
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running program:", err)
-		os.Exit(1)
-	}
 }
