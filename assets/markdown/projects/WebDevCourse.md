@@ -1,3 +1,3 @@
-# Test code for Project page
+# WebDevCourse project details haven't been made yet... :/
 
-Insert project [here](https://projectURL.keep)
+[Source Code](https://github.com/ZachLTech/webdevcourse)
