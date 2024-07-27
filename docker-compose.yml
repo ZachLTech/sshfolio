@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  sshfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    ports:
+        - "22220:22220"
+    command: go run .
+
