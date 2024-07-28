@@ -30,7 +30,7 @@ import (
 
 const (
 	host = "0.0.0.0"
-	port = "22220"
+	port = "23"
 )
 
 // Starts the Bubbletea TUI & sets up initial state
