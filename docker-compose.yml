@@ -8,6 +8,6 @@ services:
     volumes:
       - ./:/app
     ports:
-        - "22220:22220"
+        - "23:22220"
     command: go run .
 
