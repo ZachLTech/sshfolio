@@ -103,6 +103,11 @@ SSH Portfolio is a modular TUI (Text User Interface) portfolio application based
 
   Edit the `/assets/MDStyle.json` file to customize markdown rendering. Refer to the [Glamour styles documentation](https://github.com/charmbracelet/glamour/tree/master/styles) for guidance on available options.
 
+## TODO
+
+- Add an intro and outro screen
+- Make the intro and outro screen customizable with .env
+
 ## Credits 🙏
 
 SSH Portfolio is built on the amazing [Charm](https://charm.sh/) ecosystem, utilizing the Bubble Tea framework. Huge thanks to Charmbracelet for their incredible work and inspiration. The inspiration for this project was from one of their demos hosted at `ssh git.charm.sh`. And when I saw that you could pair [Bubbletea](https://github.com/charmbracelet/bubbletea) with something they made called [Wish](https://github.com/charmbracelet/wish) to make it an SSHable application, I was absolutely amazed and immediately started working on this project xD
