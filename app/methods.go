@@ -8,6 +8,7 @@ import (
 
 	"sshfolio/ui"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -48,6 +49,31 @@ func (m Model) CyclePage(direction string) Model {
 	} else {
 		return m
 	}
+}
+func SaturateContent(m Model, viewportWidth int) string {
+	// Checks which page the user is on and renders it accordingly
+	var content string
+	var err error
+
+	rawMarkdownPageTemplate, _ := glamour.NewTermRenderer(
+		glamour.WithStylePath("assets/MDStyle.json"),
+		// glamour.WithAutoStyle(), - For Light/Darkmode styling except I'd rather use my custom style
+		glamour.WithWordWrap(viewportWidth-20),
+	)
+
+	switch m.PageIndex {
+	case 0: // Home
+		content, err = rawMarkdownPageTemplate.Render(ui.GetMarkdown("homepage"))
+		ui.Check(err, "Gleam Markdown Render")
+	case 1: // About
+		content, err = rawMarkdownPageTemplate.Render(ui.GetMarkdown("about"))
+		ui.Check(err, "Gleam Markdown Render")
+	case 3: // Contact
+		content, err = rawMarkdownPageTemplate.Render(ui.GetMarkdown("contact"))
+		ui.Check(err, "Gleam Markdown Render")
+	}
+
+	return content
 }
 
 /******************* Mouse support utils ************************/

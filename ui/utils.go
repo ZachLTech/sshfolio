@@ -1,10 +1,10 @@
 package ui
 
+/******************* This file correlates with sshfolio/app/methods.go & is for any helper or utility function that doesn't need to define a method on the bubbletea model ************************/
+
 import (
 	"fmt"
 	"os"
-
-	"sshfolio/app"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/glamour"
@@ -18,13 +18,13 @@ func Check(e error, check string) {
 }
 
 /******************* Projects list setup ************************/
-type item struct {
-	title, desc string
+type Item struct {
+	TitleText, Desc string
 }
 
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
+func (i Item) Title() string       { return i.TitleText }
+func (i Item) Description() string { return i.Desc }
+func (i Item) FilterValue() string { return i.TitleText }
 
 /******************* Projects list navigation utils ************************/
 func OpenProject(selectedProject int, projects []string, viewportWidth int) string {
@@ -52,31 +52,6 @@ func GetMarkdown(filename string) string {
 	Check(err, "Markdown File IO")
 
 	return string(fileData)
-}
-func SaturateContent(m app.Model, viewportWidth int) string {
-	// Checks which page the user is on and renders it accordingly
-	var content string
-	var err error
-
-	rawMarkdownPageTemplate, _ := glamour.NewTermRenderer(
-		glamour.WithStylePath("assets/MDStyle.json"),
-		// glamour.WithAutoStyle(), - For Light/Darkmode styling except I'd rather use my custom style
-		glamour.WithWordWrap(viewportWidth-20),
-	)
-
-	switch m.PageIndex {
-	case 0: // Home
-		content, err = rawMarkdownPageTemplate.Render(GetMarkdown("homepage"))
-		Check(err, "Gleam Markdown Render")
-	case 1: // About
-		content, err = rawMarkdownPageTemplate.Render(GetMarkdown("about"))
-		Check(err, "Gleam Markdown Render")
-	case 3: // Contact
-		content, err = rawMarkdownPageTemplate.Render(GetMarkdown("contact"))
-		Check(err, "Gleam Markdown Render")
-	}
-
-	return content
 }
 
 /******************* Help Component Defaults ************************/
