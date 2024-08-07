@@ -1,3 +1,0 @@
-# I've been asked not to detail Eduquest...
-
-[Source Code](https://github.com/EduquestAI/Eduquest-Qubitx)

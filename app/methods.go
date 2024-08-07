@@ -64,13 +64,13 @@ func SaturateContent(m Model, viewportWidth int) string {
 	switch m.PageIndex {
 	case 0: // Home
 		content, err = rawMarkdownPageTemplate.Render(ui.GetMarkdown("homepage"))
-		ui.Check(err, "Gleam Markdown Render")
+		ui.Check(err, "Gleam Markdown Render", false)
 	case 1: // About
 		content, err = rawMarkdownPageTemplate.Render(ui.GetMarkdown("about"))
-		ui.Check(err, "Gleam Markdown Render")
+		ui.Check(err, "Gleam Markdown Render", false)
 	case 3: // Contact
 		content, err = rawMarkdownPageTemplate.Render(ui.GetMarkdown("contact"))
-		ui.Check(err, "Gleam Markdown Render")
+		ui.Check(err, "Gleam Markdown Render", false)
 	}
 
 	return content

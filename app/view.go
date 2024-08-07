@@ -36,8 +36,9 @@ func (m Model) View() string {
 		m.Content = m.ViewportHeader(m.Pages[m.PageIndex]) + m.ProjectView + m.ViewportFooter()
 	}
 
-	header := lipgloss.PlaceHorizontal(m.Viewport.Width, lipgloss.Center, ui.BubbleLettersStyle.Render(ui.ASCIIName))
+	header := lipgloss.PlaceHorizontal(m.Viewport.Width, lipgloss.Center, ui.BubbleLettersStyle.Render(ui.GetHeader()))
+	headerMessage := lipgloss.PlaceHorizontal(m.Viewport.Width, lipgloss.Center, ui.BubbleLettersStyle.Render(ui.GetHeaderMessage()))
 	nav = lipgloss.PlaceHorizontal(m.Viewport.Width, lipgloss.Center, ui.NavStyle.Render(nav))
 
-	return header + nav + m.Content + ui.NavStyle.Render(m.Help.View(m.Keys)) // NAME TITLE + NAVIGATION + MAIN PAGE + FOOTER/HELP
+	return header + headerMessage + nav + m.Content + ui.NavStyle.Render(m.Help.View(m.Keys)) // NAME TITLE + NAVIGATION + MAIN PAGE + FOOTER/HELP
 }

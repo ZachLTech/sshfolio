@@ -10,12 +10,15 @@ import (
 	"syscall"
 	"time"
 
+	"sshfolio/ui"
+
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
+	"github.com/joho/godotenv"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -23,23 +26,29 @@ import (
 func RunTUI() {
 	model, options := TUIConfig()
 
-	// Create a new Bubble Tea program
 	p := tea.NewProgram(model, options...)
 
-	// Start the program
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }
 
-func RunSSHTUI(host string, port string) {
+func RunSSHTUI() {
+	err := godotenv.Load()
+	ui.Check(err, "Loading .env to run SSH TUI", true)
+
+	var (
+		host = os.Getenv("HOST")
+		port = os.Getenv("PORT")
+	)
+
 	server, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
 			bubbletea.Middleware(SSHTUIConfig),
-			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
+			activeterm.Middleware(),
 			logging.Middleware(),
 		),
 	)

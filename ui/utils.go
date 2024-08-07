@@ -5,15 +5,21 @@ package ui
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/glamour"
+	"github.com/common-nighthawk/go-figure"
+	"github.com/joho/godotenv"
 )
 
 // Check err
-func Check(e error, check string) {
+func Check(e error, check string, fatal bool) {
 	if e != nil {
 		fmt.Printf("Error running program - In %v: %v", check, e)
+		if fatal {
+			os.Exit(1)
+		}
 	}
 }
 
@@ -37,7 +43,7 @@ func OpenProject(selectedProject int, projects []string, viewportWidth int) stri
 			)
 
 			projectPage, err := rawProjectPageTemplate.Render(GetMarkdown("projects/" + project))
-			Check(err, "Project Glamour Render")
+			Check(err, "Project Glamour Render", false)
 
 			return projectPage
 		}
@@ -49,7 +55,7 @@ func OpenProject(selectedProject int, projects []string, viewportWidth int) stri
 // Function to read and return markdown file data for each page
 func GetMarkdown(filename string) string {
 	fileData, err := os.ReadFile("./assets/markdown/" + filename + ".md")
-	Check(err, "Markdown File IO")
+	Check(err, "Markdown File IO", false)
 
 	return string(fileData)
 }
@@ -92,4 +98,30 @@ func Max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+/******************* Header setup utils ************************/
+func CountLines(s string) int {
+	// Split the string by the newline character
+	lines := strings.Split(s, "\n")
+	// Return the number of lines
+	return len(lines)
+}
+func GetHeader() string {
+	// Load dotenv
+	err := godotenv.Load()
+	Check(err, "Loading .env for Header", true)
+
+	title := figure.NewFigure(strings.ToUpper(os.Getenv("HEADER")), "larry3d", true)
+
+	return fmt.Sprintf("\n%v", title.String())
+}
+func GetHeaderMessage() string {
+	// Load dotenv
+	err := godotenv.Load()
+	Check(err, "Loading .env for Header", true)
+
+	messasge := os.Getenv("HEADER_MESSAGE")
+
+	return fmt.Sprintf("\n%v\n", messasge)
 }

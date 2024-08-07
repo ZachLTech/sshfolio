@@ -1,30 +1,50 @@
 package app
 
 import (
+	"fmt"
+	"os"
 	"sshfolio/ui"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/ssh"
+	"github.com/joho/godotenv"
 )
 
 func TUIConfig() (tea.Model, []tea.ProgramOption) {
+	// Load dotenv
+	err := godotenv.Load()
+	ui.Check(err, "Loading .env for TUI Config", true)
+
 	// Initial model & setup when running the program
 	pages := []string{"home", "about", "projects", "contact"}
 
 	// Initializes projects list and itemized list for projects page
-	projects := []string{"AEVSoftware", "Devfolify", "Schedulix", "SSHfolio", "Eduquest", "MemeAPI", "WebDevCourse", "Homelab", "ZachLTechWeb"}
-	itemizedProjects := []list.Item{
-		ui.Item{TitleText: "Alset Solar Cybersedan Software", Desc: "A full stack ecosystem powering the FAUHS AEV solar car"},
-		ui.Item{TitleText: "Devfolify", Desc: "Giving you real world problems and a chance to solve it using code in your unique way"},
-		ui.Item{TitleText: "Schedulix", Desc: "A program that helps university students develop their course schedules for their upcoming semester"},
-		ui.Item{TitleText: "SSHfolio", Desc: "Minimally showing off all your unique talents through a publically SSHable TUI interface written in Go"},
-		ui.Item{TitleText: "Eduquest", Desc: "Enjoy a world where education is guided by YOUR passions and preferences."},
-		ui.Item{TitleText: "MemeAPI", Desc: "Just a funny API with ElysiaJS because Bun is cool and I had this idea a while ago for fun"},
-		ui.Item{TitleText: "WebDevCourse", Desc: "Homemade Web Dev't Course for Friends that doesn't involve 12 hour \"full course\" videos (they're bad)"},
-		ui.Item{TitleText: "The Lopez Lab", Desc: "A personal homelab infrastructure I put together for complex code experimentation and hosting almost anything"},
-		ui.Item{TitleText: "Personal Digital Branding", Desc: "A collective web of sites and easter eggs I laid across the internet for anyone to explore"},
+	projects := []string{}
+	itemizedProjects := []list.Item{}
+
+	for i := 1; i >= 1; i++ {
+		// Gets formatted .env title per iteration
+		ProjectFileTitle := fmt.Sprintf("PROJECT_%d_MARKDOWN_FILE_TITLE", i)
+		ProjectDisplayTitle := fmt.Sprintf("PROJECT_%d_DISPLAY_TITLE", i)
+		ProjectDescription := fmt.Sprintf("PROJECT_%d_DESCRIPTION", i)
+
+		// Checks if there in fact is a project for this iteration
+		_, exists := os.LookupEnv(ProjectDisplayTitle)
+		if !exists {
+			break
+		}
+
+		// Builds the project item for bubbletea list component
+		ProjectItem := ui.Item{
+			TitleText: os.Getenv(ProjectDisplayTitle),
+			Desc:      os.Getenv(ProjectDescription),
+		}
+
+		// Appends data to the arrays necessary to build the project list
+		projects = append(projects, os.Getenv(ProjectFileTitle))
+		itemizedProjects = append(itemizedProjects, ProjectItem)
 	}
 
 	initialModel := Model{
