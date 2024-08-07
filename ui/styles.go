@@ -1,9 +1,6 @@
 package ui
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -43,15 +40,3 @@ var (
 		return BorderTitleStyle.BorderStyle(b)
 	}()
 )
-
-// Page viewport header and footer render
-func (m model) viewportHeader(pageTitle string) string {
-	title := BorderTitleStyle.Render(pageTitle)
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
-	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
-}
-func (m model) viewportFooter() string {
-	info := BorderInfoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
-	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
-}

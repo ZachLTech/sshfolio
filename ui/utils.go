@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"sshfolio/app"
+
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/glamour"
 )
 
@@ -50,7 +53,7 @@ func GetMarkdown(filename string) string {
 
 	return string(fileData)
 }
-func SaturateContent(m model, viewportWidth int) string {
+func SaturateContent(m app.Model, viewportWidth int) string {
 	// Checks which page the user is on and renders it accordingly
 	var content string
 	var err error
@@ -61,7 +64,7 @@ func SaturateContent(m model, viewportWidth int) string {
 		glamour.WithWordWrap(viewportWidth-20),
 	)
 
-	switch m.pageIndex {
+	switch m.PageIndex {
 	case 0: // Home
 		content, err = rawMarkdownPageTemplate.Render(GetMarkdown("homepage"))
 		Check(err, "Gleam Markdown Render")
@@ -76,49 +79,23 @@ func SaturateContent(m model, viewportWidth int) string {
 	return content
 }
 
-// Bubbletea function to cycle each page (when tab is clicked, this function handles the update event)
-func (m model) CyclePage(direction string) model {
-	if m.pageIndex < len(m.pages) && direction == "right" {
-		switch m.pageIndex {
-		case len(m.pages) - 1:
-			m.pageIndex = 0
-			return m
-		default:
-			m.pageIndex++
-			return m
-		}
-	} else if m.pageIndex >= 0 && direction == "left" {
-		switch m.pageIndex {
-		case 0:
-			m.pageIndex = len(m.pages) - 1
-			return m
-		default:
-			m.pageIndex--
-			return m
-		}
-	} else {
-		return m
+/******************* Help Component Defaults ************************/
+// Bubbletea help component full & short displays
+func (k KeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Navigate, k.RCycle, k.Enter, k.Quit, k.Help}
+}
+func (k KeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.RCycle, k.Enter},
+		{k.Up, k.Down},
+		{k.LCycle, k.Back},
+		{k.Help, k.Quit},
 	}
 }
 
 /******************* Mouse support utils ************************/
 // Gets the location and size of each navigation menu button
 // (this is hard coded as of now since I have no idea how to programmatically find a components location & size in the terminal)
-func (m model) CalculateNavItemPosition(title string) (int, int) {
-	startingPoint := m.viewport.Width/2 - 57
-	switch title {
-	case "home":
-		return startingPoint + 30, 9
-	case "about":
-		return startingPoint + 43, 9
-	case "projects":
-		return startingPoint + 58, 9
-	case "contact":
-		return startingPoint + 75, 9
-	default:
-		return 0, 0
-	}
-}
 func CalculateNavItemSize(title string) (int, int) {
 	switch title {
 	case "home":
