@@ -63,7 +63,7 @@ func GetMarkdown(filename string) string {
 /******************* Help Component Defaults ************************/
 // Bubbletea help component full & short displays
 func (k KeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Navigate, k.RCycle, k.Enter, k.Quit, k.Help}
+	return []key.Binding{k.Navigate, k.RCycle, k.Enter, k.Back, k.Quit, k.Help}
 }
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
