@@ -1,120 +1,72 @@
-# SSHFolio 🚀
+# SSHfolio Web Demo
 
-SSH Portfolio is a modular TUI (Text User Interface) portfolio application based on the [Bubble Tea framework](https://github.com/charmbracelet/bubbletea). This project allows you to showcase your portfolio in a terminal environment, providing a unique way to present your projects, biography, contact information, and more. It's designed to be easily customizable and self-hostable using Docker.
+A web-based interactive demo of the SSHfolio terminal portfolio system, allowing users to experience the SSH portfolio interface directly in their browser. This demo provides a seamless way to preview the SSHfolio terminal user interface without requiring SSH access.
 
-## Features 🌟
+![SSHfolio Web Demo Screenshot](./sshfolio-site-preview.png)
 
-- **Modular and Customizable**: Easily modify the portfolio to suit your needs using simple `.env` configuration and markdown files for your projects, about me, contact page, and home page.
-- **SSH Optional**: Configure the application to run either as an SSH server or directly as a TUI in the terminal where it's executed, depending on your setup preferences.
-- **Mouse Support**: 🖱️ Navigate through the application using scrolling and clicking, even though it's a TUI.
-- **Self-Hostable**: 🏠 Includes `Dockerfile` and `docker-compose.yml` for easy deployment.
-- **Markdown Rendering**: 🎨 Customize markdown colors and behavior via the `/assets/MDStyle.json` file, with support from the [Glamour](https://github.com/charmbracelet/glamour) library.
+## Overview 🚀
 
-## SSH Quick Start 🚀
+This web demo serves as a companion to my main [SSHfolio](https://github.com/ZachLTech/sshfolio) project, providing an accessible way to showcase my terminal-based portfolio. It features a real-time terminal emulator that connects to the actual SSHfolio instance, allowing users to interact with the portfolio system directly from their web browser.
 
-### Prerequisites 📋
+## Features ✨
 
-- [Docker](https://www.docker.com/get-started) installed on your system.
-- An SSH client if you plan to use the SSH server feature.
+- **Live Terminal Emulation**: Real-time terminal experience using Xterm.js
+- **WebSocket Integration**: Direct connection to SSHfolio instance via secure WebSocket proxy
+- **Responsive Design**: Fully responsive terminal interface that adapts to different screen sizes
+- **Interactive UI**: Connect/disconnect functionality with status indicators
+- **Native Terminal Experience**: Full support for terminal colors, formatting, and interactions
+- **Docker Support**: Fully containerized deployment with Docker Compose
 
-### Installation 🛠️
+## Tech Stack 🛠️
+
+- **Frontend**:
+  - Xterm.js for terminal emulation
+  - TailwindCSS for styling
+  - Vanilla JavaScript for interactions
+  
+- **Backend**:
+  - Node.js WebSocket proxy
+  - SSH2 for secure shell connections
+  - WebSocket server for real-time communication
+
+- **Infrastructure**:
+  - Docker & Docker Compose
+  - Node.js Alpine containers
+  - Bridge networking
+
+## Quick Start with Docker 🐳
 
 1. **Clone the Repository**
-
    ```bash
-   git clone https://github.com/ZachLTech/sshfolio.git
+   git clone https://github.com/ZachLTech/sshfolio
    cd sshfolio
+   git checkout demo
    ```
 
-2. **Set Up Environment Variables**
-
-   Create a `.env` file in the project root and configure it according to your needs. Here's a template to get you started:
-
-   ```env
-   SSH_SERVER_ENABLED=true # If false, the application will only serve the TUI in the terminal where the program is being run. If true, the application will run an SSH server for the TUI and serve to the port specified below.
-   PORT=23
-   HOST="0.0.0.0" # Whatever machine you run this on will be the host by default.
-
-   HEADER="John Doe"
-   HEADER_MESSAGE="'The intricacy of John is just so very Doe' - Jane Doe" # Doesn't have to be a quote - but that's what I put for mine :D
-
-   # Project Configuration (Don't leave any extra blank projects. This is just an example)
-   PROJECT_1_MARKDOWN_FILE_TITLE="LoremIpsum"
-   PROJECT_1_DISPLAY_TITLE="Lorem Ipsum Woah"
-   PROJECT_1_DESCRIPTION="Lorem ipsum dolor sit amet, consectetur adipiscing elit"
-   ```
-
-3. **Run with Docker** 🐳
-
-   Build and start the Docker container using Docker Compose:
-
+2. **Launch the Application**
    ```bash
-   docker-compose up --build
+   docker-compose up
    ```
 
-4. **SSH** ‼️
-   
-   Once the docker container has finished building and is running, your SSHFolio instance will be available to SSH into if SSH_SERVER_ENABLED is set to `true`.
+3. **Access the Demo**
+   Open `http://localhost:3000` in your browser
 
-   Assuming you're testing this all on the same machine, you can now SSH into the portfolio TUI like so:
-   
-   ```bash
-   ssh localhost -p 23
-   ```
+## Live Demo 🎮
 
-### Usage 🎯
+Experience the live demo at: [https://sshfolio.zachl.tech](https://sshfolio.zachl.tech)
 
-- **Make it your own**
-  
-  If you're planning to use this as your own SSHfolio, here's are a few steps on how to do so.
-
-  1. After cloning, rename the `.env.sample` file to `.env` and fill it out with your own personal portfolio information
-  2. Write your Home, About, and Contact page markdown files (they're located in `/assets/markdown`
-  3. Write your corresponding Project markdown files for each project you listed in the `.env` file
-     - Each markdown file should be named what you put under `PROJECT_x_MARKDOWN_FILE_TITLE` with the .md at the end of course
-     - All project markdown files should be placed in the `/assets/markdown/projects` directory
-    
-  And that's it! You now have your very own, fully customized, portfolio TUI!!
-
-- **Access Your Instance**
-
-  If running as an SSH server, connect to your instance via SSH:
-
-  ```bash
-  ssh <HOST-MACHINE-IP> -p <PORT>
-  ```
-
-  If running as a local TUI, simply execute the program:
-
-  ```bash
-  go mod tidy && go run .
-  ```
-
-- **View the Demo**
-
-  Check out the live demo instances:
-
-  - Personal instance: `ssh zachl.tech`
-  - Demo instance: `ssh sshdemo.zachl.tech`
-
-## Further Customization 🎨
-
-- **Markdown Styles**
-
-  Edit the `/assets/MDStyle.json` file to customize markdown rendering. Refer to the [Glamour styles documentation](https://github.com/charmbracelet/glamour/tree/master/styles) for guidance on available options.
-
-## TODO
-
-- Add an intro and outro screen
-- Make the intro and outro screen customizable with .env
-
-## Credits 🙏
-
-SSH Portfolio is built on the amazing [Charm](https://charm.sh/) ecosystem, utilizing the Bubble Tea framework. Huge thanks to Charmbracelet for their incredible work and inspiration. The inspiration for this project was from one of their demos hosted at `ssh git.charm.sh`. And when I saw that you could pair [Bubbletea](https://github.com/charmbracelet/bubbletea) with something they made called [Wish](https://github.com/charmbracelet/wish) to make it an SSHable application, I was absolutely amazed and immediately started working on this project xD
+Or try the actual SSH portfolio:
+```bash
+ssh zachl.tech
+```
 
 ## Contributing 🤝
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/awesome-feature`
+3. Commit your changes: `git commit -m 'Add awesome feature'`
+4. Push to the branch: `git push origin feature/awesome-feature`
+5. Submit a pull request
 
 ## License 📄
 
