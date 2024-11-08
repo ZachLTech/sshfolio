@@ -1,4 +1,3 @@
-// server.js
 const WebSocket = require('ws');
 const { Client } = require('ssh2');
 const http = require('http');
@@ -17,18 +16,17 @@ wss.on('connection', (ws) => {
         
         ssh.shell({ 
             term: 'xterm-256color',
-            cols: 80,
-            rows: 24
-        }, (err, _stream) => {
+            cols: 129,
+            rows: 42
+        }, (err, sstream) => {
             if (err) {
                 console.error('Shell error:', err);
                 ws.close();
                 return;
             }
             
-            stream = _stream;
+            stream = sstream;
             
-            // Send SSH data to WebSocket client
             stream.on('data', (data) => {
                 try {
                     ws.send(data.toString('utf8'));
@@ -37,10 +35,8 @@ wss.on('connection', (ws) => {
                 }
             });
             
-            // Send WebSocket data to SSH connection
             ws.on('message', (data) => {
                 try {
-                    // Check if the message is a resize command
                     const message = data.toString();
                     if (message.startsWith('{')) {
                         const parsed = JSON.parse(message);
@@ -49,14 +45,12 @@ wss.on('connection', (ws) => {
                             return;
                         }
                     }
-                    // Otherwise treat it as regular input
                     stream.write(data);
                 } catch (error) {
                     console.error('Error handling message:', error);
                 }
             });
             
-            // Handle stream close
             stream.on('close', () => {
                 console.log('Stream closed');
                 ssh.end();
@@ -72,7 +66,7 @@ wss.on('connection', (ws) => {
     
     ssh.connect({
         host: 'zachl.tech',
-        username: 'anonymous',
+        username: 'visitor',
         tryKeyboard: true,
         password: ''
     });
@@ -102,7 +96,7 @@ server.on('upgrade', (request, socket, head) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3001;
 server.listen(PORT, () => {
     console.log(`WebSocket server listening on port ${PORT}`);
 });

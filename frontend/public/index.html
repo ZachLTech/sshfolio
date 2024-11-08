@@ -1,0 +1,85 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ZachLTech - SSHfolio</title>
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="assets/style.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.min.css" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/addons/fit/fit.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/addons/fit/fit.js"></script>
+        <script src="assets/script.js"></script>
+    </head>
+    <body class="w-screen bg-[#1e1e1e] px-16 flex flex-col items-center">
+        <div class="w-[1100px] flex flex-col">
+            <header class="flex items-center justify-center mt-4 mb-12 gap-4 relative">
+                <div class="w-full h-[1px] bg-[#444444]"></div>
+                <img class="w-[40px] h-[40px] rounded-full" src="https://avatars.githubusercontent.com/u/109718204?v=4" alt="ZachLTech">
+                <div class="w-full h-[1px] bg-[#444444]"></div>
+                <div class="flex items-center gap-3">
+                    <a href="https://github.com/ZachLTech/sshfolio" target="_blank" class="text-[#646464] italic hover:underline">source </a>
+                    <div class="w-4 h-[1px] bg-[#444444]"></div>
+                </div>
+            </header>
+            <div class="text-white">
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold mb-4">My SSHFolio</h1>
+                    <p class="text-lg text-gray-300 mb-6">
+                        A unique terminal-based portfolio experience that brings the command line to life. 
+                        SSHFolio is a Text User Interface (TUI) portfolio application that lets you explore my work 
+                        through an interactive terminal environment.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h2 class="text-2xl font-semibold mb-4">Features 😎</h2>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li>Interactive TUI navigation</li>
+                            <li>Full mouse support for scrolling and clicking</li>
+                            <li>Rich markdown rendering with custom styling</li>
+                            <li>Projects showcase with detailed descriptions</li>
+                            <li>About me and contact information sections</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h2 class="text-2xl font-semibold mb-4">Try It Out! 💻</h2>
+                        <div class="space-y-4 text-gray-300">
+                            <p>Access my portfolio directly through SSH in any terminal:</p>
+                            <div class="bg-black rounded p-3 font-mono">
+                                $ ssh zachl.tech
+                            </div>
+                            <p class="text-sm">Or create your own version:</p>
+                            <div class="bg-black rounded p-3 font-mono">
+                                $ git clone https://github.com/ZachLTech/sshfolio.git
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full h-[1px] bg-[#444444] my-12"></div>
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Interactive Demo ⚡</h2>
+                    <p class="text-gray-300">
+                        You can also experience my SSHFolio interface right here in your browser using the terminal below. 
+                        Click "Connect" to check it out!
+                    </p>
+                </div>
+            </div>
+            <div class="w-full">
+                <div class="flex gap-2 mb-4">
+                    <button id="connectBtn" onclick="connect()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed">Connect</button>
+                    <button id="disconnectBtn" onclick="disconnect()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>Disconnect</button>
+                </div>
+                <div id="status" class="text-white mb-4">Not connected</div>
+                <div id="terminal" class="bg-black rounded-lg p-4 h-[700px] w-full *:overflow-y-hidden"></div>
+            </div>
+            <div class="flex items-center justify-center mt-12 mb-5 gap-4">
+                <div class="w-full h-[1px] bg-[#444444]"></div>
+                <p class="w-[705px] text-white text-sm sm:text-base">Website made with ❤️ by <a class="underline bg-gradient-to-r from-green-400 to-green-700 inline-block text-transparent bg-clip-text" href="https://zachl.tech" target="_blank">ZachLTech</a></p>
+                <div class="w-full h-[1px] bg-[#444444]"></div>
+            </div>
+        </div>
+    </body>    
+</html>

@@ -1,0 +1,23 @@
+/* Literally just scrollbar stuff */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: black black;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: black;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: black;
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+}
