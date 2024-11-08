@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     container_name: site-sshfolio
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - sshfolio_backend
     networks:
