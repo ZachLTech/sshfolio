@@ -1,6 +1,6 @@
 # SSHfolio Web Demo
 
-A web-based interactive demo of the SSHfolio terminal portfolio system, allowing users to experience the SSH portfolio interface directly in their browser. This demo provides a seamless way to preview the SSHfolio terminal user interface without requiring SSH access.
+A web-based interactive demo of my SSHfolio terminal portfolio, allowing users to experience the SSH portfolio interface directly in their browser. This demo provides a seamless way to preview the SSHfolio terminal user interface without requiring SSH access.
 
 ![SSHfolio Web Demo Screenshot](./sshfolio-site-preview.png)
 
