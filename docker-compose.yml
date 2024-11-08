@@ -19,7 +19,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      - sshfolio_backend
     networks:
       - sshfolio-network
     restart: unless-stopped
