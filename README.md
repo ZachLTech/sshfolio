@@ -95,7 +95,7 @@ SSH Portfolio is a modular TUI (Text User Interface) portfolio application based
   Check out the live demo instances:
 
   - Personal instance: `ssh zachl.tech`
-  - Demo instance: `ssh sshdemo.zachl.tech`
+  - Demo instance (Not currently up): ~~`ssh sshdemo.zachl.tech`~~
 
 ## Further Customization 🎨
 
