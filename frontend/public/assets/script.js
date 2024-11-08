@@ -1,7 +1,7 @@
 let term;
 let socket;
 let isConnected = false;
-const PROXY_URL = 'ws://localhost:3001';
+const PROXY_URL = 'wss://sshfolio-proxy.zachl.tech';
 
 function initTerminal() {
     term = new Terminal({
