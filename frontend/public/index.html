@@ -26,8 +26,8 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/addons/fit/fit.js"></script>
         <script src="assets/script.js"></script>
     </head>
-    <body class="w-screen bg-[#1e1e1e] px-16 flex flex-col items-center">
-        <div class="w-[1100px] flex flex-col">
+    <body class="w-screen bg-[#1e1e1e] px-4 sm:px-16 flex flex-col items-center">
+        <div class="w-full sm:w-[1100px] flex flex-col">
             <header class="flex items-center justify-center mt-4 mb-12 gap-4 relative">
                 <div class="w-full h-[1px] bg-[#444444]"></div>
                 <img class="w-[40px] h-[40px] rounded-full" src="https://avatars.githubusercontent.com/u/109718204?v=4" alt="ZachLTech">
@@ -46,7 +46,7 @@
                         through an interactive terminal environment.
                     </p>
                 </div>
-                <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
                     <div>
                         <h2 class="text-2xl font-semibold mb-4">Features 😎</h2>
                         <ul class="list-disc list-inside space-y-2 text-gray-300">
@@ -77,7 +77,7 @@
                     <h2 class="text-2xl font-semibold mb-4">Interactive Demo ⚡</h2>
                     <p class="text-gray-300">
                         You can also experience my SSHFolio interface right here in your browser using the terminal below. 
-                        Click "Connect" to check it out!
+                        Click "Connect" to check it out! <span class="sm:hidden block">(P.S. If you're on mobile then half of it will be cutoff...)</span>
                     </p>
                 </div>
             </div>
@@ -87,11 +87,11 @@
                     <button id="disconnectBtn" onclick="disconnect()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>Disconnect</button>
                 </div>
                 <div id="status" class="text-white mb-4">Not connected</div>
-                <div id="terminal" class="bg-black rounded-lg p-4 h-[700px] w-full *:overflow-y-hidden"></div>
+                <div id="terminal" class="bg-black rounded-lg p-4 h-[700px] sm:h-[700px] w-full *:overflow-y-hidden"></div>
             </div>
             <div class="flex items-center justify-center mt-12 mb-5 gap-4">
                 <div class="w-full h-[1px] bg-[#444444]"></div>
-                <p class="w-[705px] text-white text-sm sm:text-base">Website made with ❤️ by <a class="underline bg-gradient-to-r from-green-400 to-green-700 inline-block text-transparent bg-clip-text" href="https://zachl.tech" target="_blank">ZachLTech</a></p>
+                <p class="w-full sm:w-[705px] text-white text-sm sm:text-base">Website made with ❤️ by <a class="underline bg-gradient-to-r from-green-400 to-green-700 inline-block text-transparent bg-clip-text" href="https://zachl.tech" target="_blank">ZachLTech</a></p>
                 <div class="w-full h-[1px] bg-[#444444]"></div>
             </div>
         </div>
