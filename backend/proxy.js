@@ -10,71 +10,122 @@ wss.on('connection', (ws) => {
     
     const ssh = new Client();
     let stream = null;
+    let initialDimensionsReceived = false;
+    let terminalDimensions = { cols: 80, rows: 24 };
+
+    function cleanupConnection() {
+        try {
+            if (stream) {
+                stream.removeAllListeners();
+                stream.end();
+            }
+            if (ssh) {
+                ssh.removeAllListeners();
+                ssh.end();
+            }
+        } catch (error) {
+            console.error('Cleanup error:', error);
+        }
+    }
+
+    ws.on('message', (data) => {
+        try {
+            const message = data.toString();
+            if (message.startsWith('{')) {
+                const parsed = JSON.parse(message);
+                if (parsed.type === 'resize') {
+                    terminalDimensions.cols = parsed.cols;
+                    terminalDimensions.rows = parsed.rows / 1.1;
+                    if (!initialDimensionsReceived) {
+                        initialDimensionsReceived = true;
+                        initializeSSHConnection();
+                    } else if (stream) {
+                        stream.setWindow(parsed.rows, parsed.cols);
+                    }
+                    return;
+                } else if (parsed.type === 'data' && stream) {
+                    stream.write(parsed.data);
+                    return;
+                }
+            }
+            if (stream) {
+                stream.write(data);
+            }
+        } catch (error) {
+            console.error('Message handling error:', error);
+        }
+    });
+
+    function initializeSSHConnection() {
+        ssh.connect({
+            host: 'zachl.tech',
+            username: 'visitor',
+            port: 2222,
+            tryKeyboard: true,
+            password: ''
+        });
+    }
     
     ssh.on('ready', () => {
+        ws.send(JSON.stringify({ type: 'status', status: 'connected' }));
         console.log('SSH Connection established');
         
         ssh.shell({ 
             term: 'xterm-256color',
-            cols: 129,
-            rows: 42
+            cols: terminalDimensions.cols,
+            rows: terminalDimensions.rows
         }, (err, sstream) => {
             if (err) {
                 console.error('Shell error:', err);
-                ws.close();
+                ws.send(JSON.stringify({ type: 'status', status: 'error', message: err.message }));
                 return;
             }
             
             stream = sstream;
             
             stream.on('data', (data) => {
-                try {
+                if (ws.readyState === ws.OPEN) {
                     ws.send(data.toString('utf8'));
-                } catch (error) {
-                    console.error('WebSocket send error:', error);
-                }
-            });
-            
-            ws.on('message', (data) => {
-                try {
-                    const message = data.toString();
-                    if (message.startsWith('{')) {
-                        const parsed = JSON.parse(message);
-                        if (parsed.type === 'resize') {
-                            stream.setWindow(parsed.rows, parsed.cols);
-                            return;
-                        }
-                    }
-                    stream.write(data);
-                } catch (error) {
-                    console.error('Error handling message:', error);
                 }
             });
             
             stream.on('close', () => {
                 console.log('Stream closed');
-                ssh.end();
-                ws.close();
+                if (ws.readyState === ws.OPEN) {
+                    ws.send(JSON.stringify({ type: 'status', status: 'disconnected' }));
+                }
+                cleanupConnection();
+            });
+
+            stream.on('end', () => {
+                console.log('Stream ended');
+                if (ws.readyState === ws.OPEN) {
+                    ws.send(JSON.stringify({ type: 'status', status: 'disconnected' }));
+                }
+                cleanupConnection();
             });
         });
     });
     
     ssh.on('error', (err) => {
         console.error('SSH error:', err);
-        ws.close();
+        if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify({ type: 'status', status: 'error', message: err.message }));
+        }
+        cleanupConnection();
     });
     
     ssh.connect({
         host: 'zachl.tech',
+        port: 2222,
         username: 'visitor',
         tryKeyboard: true,
         password: ''
     });
     
-    ws.on('close', () => {
+    wss.on('close', () => {
         console.log('WebSocket connection closed');
-        if (stream) stream.close();
-        ssh.end();
+        cleanupConnection();
     });
 });
 
@@ -99,4 +150,12 @@ server.on('upgrade', (request, socket, head) => {
 const PORT = 3001;
 server.listen(PORT, () => {
     console.log(`WebSocket server listening on port ${PORT}`);
+});
+
+server.on('close', () => {
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.close();
+        }
+    });
 });
