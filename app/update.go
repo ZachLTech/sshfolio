@@ -29,6 +29,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if msg.X >= x && msg.X <= x+width && msg.Y >= y && msg.Y <= y+height {
 					m.PageIndex = i
 					m.Viewport.SetContent(SaturateContent(m, m.Viewport.Width))
+					m.Viewport.GotoTop()
 					return m, nil
 				} else if msg.Y >= ui.TermHeight-3 {
 					m.Help.ShowAll = !m.Help.ShowAll
@@ -90,21 +91,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, ui.DefaultKeyMap.RCycle):
 			cycled := m.CyclePage("right")
 			cycled.Viewport.SetContent(SaturateContent(cycled, m.Viewport.Width))
+			cycled.Viewport.GotoTop()
 			return cycled, nil
 		case key.Matches(msg, ui.DefaultKeyMap.LCycle):
 			cycled := m.CyclePage("left")
 			m.Viewport.SetContent(SaturateContent(cycled, m.Viewport.Width))
+			m.Viewport.GotoTop()
 			return m.CyclePage("left"), nil
 		case key.Matches(msg, ui.DefaultKeyMap.Left):
 			if m.PageIndex > 0 {
 				m.PageIndex--
 				m.Viewport.SetContent(SaturateContent(m, m.Viewport.Width))
+				m.Viewport.GotoTop()
 			}
 			return m, nil
 		case key.Matches(msg, ui.DefaultKeyMap.Right):
 			if m.PageIndex < len(m.Pages)-1 {
 				m.PageIndex++
 				m.Viewport.SetContent(SaturateContent(m, m.Viewport.Width))
+				m.Viewport.GotoTop()
 			}
 			return m, nil
 		case key.Matches(msg, ui.DefaultKeyMap.Enter):
